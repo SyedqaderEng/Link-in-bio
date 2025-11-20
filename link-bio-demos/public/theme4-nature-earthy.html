@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme 4: Nature-Inspired</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(to bottom, #E8D5C4 0%, #C9B5A0 100%);
+            color: #2D2D2D;
+            position: relative;
+        }
+
+        /* Organic shapes background */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        body::before {
+            width: 400px;
+            height: 400px;
+            background: #2D5016;
+            top: -200px;
+            right: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            background: #0A3D62;
+            bottom: -150px;
+            left: -80px;
+            animation: float2 18s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-50px, 50px) scale(1.1); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, -30px) scale(1.15); }
+        }
+
+        .container {
+            max-width: 580px;
+            width: 100%;
+            padding: 50px 20px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Card with organic border */
+        .profile-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 45px 35px;
+            box-shadow: 0 20px 60px rgba(45, 80, 22, 0.15);
+            border: 2px solid rgba(45, 80, 22, 0.1);
+        }
+
+        /* Profile section */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .profile-image {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin: 0 auto 22px;
+            background: linear-gradient(135deg, #2D5016, #4A7C2C);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            color: #E8D5C4;
+            font-weight: 600;
+            border: 3px solid rgba(45, 80, 22, 0.2);
+            transition: transform 0.4s ease;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.08) rotate(5deg);
+        }
+
+        .profile-name {
+            font-size: 32px;
+            font-weight: 600;
+            color: #2D5016;
+            margin-bottom: 10px;
+            font-family: 'Crimson Pro', serif;
+            letter-spacing: -0.5px;
+        }
+
+        .profile-bio {
+            font-size: 15px;
+            color: #5A5A5A;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+
+        /* Decorative leaf divider */
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 24px;
+            color: #2D5016;
+            opacity: 0.4;
+        }
+
+        /* Social icons */
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 35px;
+        }
+
+        .social-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid #2D5016;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2D5016;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+
+        .social-icon:hover {
+            background: #2D5016;
+            color: #E8D5C4;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(45, 80, 22, 0.3);
+        }
+
+        /* Links */
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .link-item {
+            background: #F9F6F2;
+            border: 2px solid #E8D5C4;
+            border-radius: 20px;
+            padding: 18px 26px;
+            text-decoration: none;
+            color: #2D2D2D;
+            font-weight: 500;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #2D5016, #4A7C2C);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .link-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .link-item:hover {
+            background: white;
+            border-color: #2D5016;
+            transform: translateX(8px);
+            box-shadow: 0 8px 24px rgba(45, 80, 22, 0.15);
+        }
+
+        .link-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .link-icon {
+            font-size: 22px;
+            transition: transform 0.3s ease;
+        }
+
+        .link-item:hover .link-icon {
+            transform: scale(1.15);
+        }
+
+        .link-arrow {
+            font-size: 20px;
+            color: #2D5016;
+            transition: transform 0.3s ease;
+        }
+
+        .link-item:hover .link-arrow {
+            transform: translateX(6px);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(45, 80, 22, 0.15);
+        }
+
+        .footer p {
+            color: #7A7A7A;
+            font-size: 13px;
+            font-weight: 400;
+            font-family: 'Crimson Pro', serif;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-card {
+                padding: 35px 25px;
+            }
+
+            .profile-name {
+                font-size: 28px;
+            }
+
+            .link-item {
+                padding: 16px 22px;
+                font-size: 14px;
+            }
+        }
+
+        /* Organic blob decoration */
+        .organic-blob {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(45, 80, 22, 0.08), transparent);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            animation: blobMorph 8s ease-in-out infinite;
+            top: 20px;
+            right: 20px;
+            z-index: -1;
+        }
+
+        @keyframes blobMorph {
+            0%, 100% {
+                border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+                transform: rotate(0deg);
+            }
+            50% {
+                border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
+                transform: rotate(180deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-card">
+            <div class="organic-blob"></div>
+
+            <div class="profile-header">
+                <div class="profile-image">LG</div>
+                <h1 class="profile-name">Lily Green</h1>
+                <p class="profile-bio">Sustainable Living Advocate & Artisan<br>Crafting mindful products from nature's gifts</p>
+            </div>
+
+            <div class="divider">🌿</div>
+
+            <div class="social-icons">
+                <a href="#" class="social-icon" aria-label="Instagram">📷</a>
+                <a href="#" class="social-icon" aria-label="Pinterest">📌</a>
+                <a href="#" class="social-icon" aria-label="Etsy">🛍️</a>
+                <a href="#" class="social-icon" aria-label="Blog">✍️</a>
+            </div>
+
+            <div class="links">
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">🌱</span>
+                        <span>Shop Handmade Collection</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">📖</span>
+                        <span>Read Sustainability Blog</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">🎓</span>
+                        <span>Join Workshop Series</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">🌍</span>
+                        <span>Learn About Our Mission</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">💚</span>
+                        <span>Support Eco Projects</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+
+                <a href="#" class="link-item">
+                    <span class="link-content">
+                        <span class="link-icon">📧</span>
+                        <span>Monthly Newsletter</span>
+                    </span>
+                    <span class="link-arrow">→</span>
+                </a>
+            </div>
+
+            <div class="footer">
+                <p>Rooted in nature, growing with purpose</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

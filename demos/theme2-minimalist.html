@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme 2: Minimalist Calm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #F5F1ED;
+            color: #2D2D2D;
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+            padding: 60px 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile section */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #D4C4B0, #A89B8C);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            color: #F5F1ED;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-name {
+            font-size: 28px;
+            font-weight: 500;
+            color: #2D2D2D;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .profile-bio {
+            font-size: 15px;
+            color: #6B6B6B;
+            line-height: 1.7;
+            max-width: 360px;
+            margin: 0 auto 28px;
+            font-weight: 300;
+        }
+
+        /* Social icons */
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 50px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid #D4C4B0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6B6B6B;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .social-icon:hover {
+            background: #2D2D2D;
+            border-color: #2D2D2D;
+            color: #F5F1ED;
+            transform: translateY(-2px);
+        }
+
+        /* Links */
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .link-item {
+            background: white;
+            border: 1px solid #E8E3DD;
+            border-radius: 12px;
+            padding: 20px 28px;
+            text-decoration: none;
+            color: #2D2D2D;
+            font-weight: 400;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            letter-spacing: 0.2px;
+        }
+
+        .link-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1px;
+            background: #2D2D2D;
+            transition: width 0.3s ease;
+        }
+
+        .link-item:hover::after {
+            width: calc(100% - 56px);
+        }
+
+        .link-item:hover {
+            border-color: #2D2D2D;
+            background: #FAFAF9;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #E8E3DD;
+        }
+
+        .footer p {
+            color: #A89B8C;
+            font-size: 13px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .profile-name {
+                font-size: 24px;
+            }
+
+            .profile-bio {
+                font-size: 14px;
+            }
+
+            .link-item {
+                padding: 18px 24px;
+                font-size: 14px;
+            }
+        }
+
+        /* Decorative element */
+        .decorative-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #D4C4B0;
+            margin: 40px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-header">
+            <div class="profile-image">ES</div>
+            <h1 class="profile-name">Emma Sullivan</h1>
+            <p class="profile-bio">Wellness Coach & Mindfulness Teacher<br>Helping you find peace in the everyday</p>
+        </div>
+
+        <div class="social-icons">
+            <a href="#" class="social-icon" aria-label="Instagram">📷</a>
+            <a href="#" class="social-icon" aria-label="Pinterest">📌</a>
+            <a href="#" class="social-icon" aria-label="YouTube">▶️</a>
+            <a href="#" class="social-icon" aria-label="Spotify">🎧</a>
+        </div>
+
+        <div class="links">
+            <a href="#" class="link-item">
+                Book a Session
+            </a>
+
+            <a href="#" class="link-item">
+                Free Meditation Guide
+            </a>
+
+            <a href="#" class="link-item">
+                Listen to My Podcast
+            </a>
+
+            <a href="#" class="link-item">
+                Shop Wellness Products
+            </a>
+
+            <a href="#" class="link-item">
+                Join My Community
+            </a>
+
+            <a href="#" class="link-item">
+                Read My Blog
+            </a>
+        </div>
+
+        <div class="decorative-dot"></div>
+
+        <div class="footer">
+            <p>EMBRACE CALM • FIND BALANCE</p>
+        </div>
+    </div>
+</body>
+</html>
