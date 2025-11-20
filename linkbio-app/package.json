@@ -1,0 +1,40 @@
+{
+  "name": "linkbio-app",
+  "version": "1.0.0",
+  "description": "Production-ready link-in-bio SaaS platform",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["link-in-bio", "saas", "nextjs", "supabase", "stripe"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@stripe/stripe-js": "^8.5.2",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.84.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.22",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.554.0",
+    "next": "^16.0.3",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.66.1",
+    "recharts": "^3.4.1",
+    "resend": "^6.5.2",
+    "stripe": "^20.0.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
+  }
+}
