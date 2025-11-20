@@ -6,12 +6,13 @@ import BoldVibrantTheme from '@/components/themes/BoldVibrantTheme'
 import NatureEarthyTheme from '@/components/themes/NatureEarthyTheme'
 import { Metadata } from 'next'
 
-export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+  const { username } = await params
   const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('display_name, bio, username')
-    .eq('username', params.username)
+    .eq('username', username)
     .single()
 
   if (!profile) {
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: { params: { username: string 
   }
 }
 
-export default async function PublicProfilePage({ params }: { params: { username: string } }) {
+export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params
   const supabase = await createClient()
 
   // Get profile
@@ -44,7 +46,7 @@ export default async function PublicProfilePage({ params }: { params: { username
         config
       )
     `)
-    .eq('username', params.username)
+    .eq('username', username)
     .single()
 
   if (profileError || !profile) {
