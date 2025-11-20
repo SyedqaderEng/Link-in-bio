@@ -12,6 +12,7 @@
     "reset-db": "node scripts/reset-db.js",
     "test-db": "node scripts/test-connection.js",
     "check": "node scripts/check-project.js",
+    "verify-prisma": "node scripts/verify-prisma.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
