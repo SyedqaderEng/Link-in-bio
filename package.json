@@ -11,7 +11,12 @@
     "init-db": "node scripts/init-db.js",
     "reset-db": "node scripts/reset-db.js",
     "test-db": "node scripts/test-connection.js",
-    "check": "node scripts/check-project.js"
+    "check": "node scripts/check-project.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
+    "prisma:migrate": "prisma migrate dev",
+    "postinstall": "prisma generate"
   },
   "keywords": [
     "link-in-bio",
@@ -24,6 +29,7 @@
   "license": "MIT",
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/client": "^7.0.0",
     "@stripe/stripe-js": "^8.5.2",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.84.0",
@@ -43,6 +49,7 @@
     "next": "^16.0.3",
     "pg": "^8.16.3",
     "postcss": "^8.5.6",
+    "prisma": "^7.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.66.1",
