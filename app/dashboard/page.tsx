@@ -1,56 +1,60 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Eye, MousePointerClick, Share2, TrendingUp, Plus, ExternalLink, Activity } from 'lucide-react'
+import { Eye, MousePointerClick, Share2, TrendingUp, Plus, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
+import { getSession } from '@/lib/session'
+import { prisma } from '@/lib/prisma'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const user = await getSession()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  if (!user) {
     redirect('/auth/login')
   }
 
   // Get profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const profile = await prisma.profile.findUnique({
+    where: { id: user.id },
+  })
+
+  if (!profile) {
+    redirect('/auth/login')
+  }
 
   // Get links
-  const { data: links } = await supabase
-    .from('links')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('position', { ascending: true })
+  const links = await prisma.link.findMany({
+    where: { userId: user.id },
+    orderBy: { position: 'asc' },
+  })
 
   // Get analytics summary (last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const { data: analytics } = await supabase
-    .from('analytics')
-    .select('event_type, created_at')
-    .eq('user_id', user.id)
-    .gte('created_at', thirtyDaysAgo.toISOString())
+  const analytics = await prisma.analytics.findMany({
+    where: {
+      userId: user.id,
+      createdAt: {
+        gte: thirtyDaysAgo,
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
 
   // Calculate stats
-  const totalViews = analytics?.filter(a => a.event_type === 'view').length || 0
-  const totalClicks = analytics?.filter(a => a.event_type === 'click').length || 0
-  const totalShares = analytics?.filter(a => a.event_type === 'share').length || 0
+  const totalViews = analytics.filter(a => a.eventType === 'view').length
+  const totalClicks = analytics.filter(a => a.eventType === 'click').length
+  const totalShares = analytics.filter(a => a.eventType === 'share').length
   const clickRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0
 
   // Get weekly data for bar chart
-  const weeklyData = getWeeklyData(analytics || [])
+  const weeklyData = getWeeklyData(analytics)
 
   // Get top links by click count
-  const topLinks = links
-    ?.sort((a, b) => b.click_count - a.click_count)
-    .slice(0, 5) || []
+  const topLinks = [...links]
+    .sort((a, b) => b.clickCount - a.clickCount)
+    .slice(0, 5)
 
   return (
     <DashboardLayout>
@@ -58,7 +62,7 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-5xl font-extrabold mb-2">
-            <span className="gradient-text">Welcome back</span>, {profile?.display_name || profile?.username}
+            <span className="gradient-text">Welcome back</span>, {profile.displayName || profile.username}
           </h1>
           <p className="text-gray-400">Here's what's happening with your links</p>
         </div>
@@ -125,7 +129,7 @@ export default async function DashboardPage() {
                 <span className="font-semibold">Add New Link</span>
               </Link>
               <Link
-                href={`/${profile?.username}`}
+                href={`/${profile.username}`}
                 target="_blank"
                 className="flex items-center gap-3 p-4 glass rounded-lg hover:bg-white/10 transition"
               >
@@ -157,7 +161,7 @@ export default async function DashboardPage() {
                       <div className="text-sm text-gray-400 truncate">{link.url}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold gradient-text">{formatNumber(link.click_count)}</div>
+                      <div className="text-2xl font-bold gradient-text">{formatNumber(link.clickCount)}</div>
                       <div className="text-sm text-gray-400">clicks</div>
                     </div>
                   </div>
@@ -177,25 +181,26 @@ export default async function DashboardPage() {
           <div className="glass p-6 rounded-2xl">
             <h3 className="text-xl font-bold mb-6">Recent Activity</h3>
             <div className="space-y-4">
-              {analytics?.slice(0, 5).map((event, index) => (
+              {analytics.slice(0, 5).map((event, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-2 ${
-                    event.event_type === 'view' ? 'bg-primary-cyan' :
-                    event.event_type === 'click' ? 'bg-primary-magenta' :
+                    event.eventType === 'view' ? 'bg-primary-cyan' :
+                    event.eventType === 'click' ? 'bg-primary-magenta' :
                     'bg-primary-lime'
                   }`} />
                   <div className="flex-1">
                     <p className="text-sm">
-                      {event.event_type === 'view' && 'Profile viewed'}
-                      {event.event_type === 'click' && 'Link clicked'}
-                      {event.event_type === 'share' && 'Profile shared'}
+                      {event.eventType === 'view' && 'Profile viewed'}
+                      {event.eventType === 'click' && 'Link clicked'}
+                      {event.eventType === 'share' && 'Profile shared'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(event.created_at).toLocaleString()}
+                      {new Date(event.createdAt).toLocaleString()}
                     </p>
                   </div>
                 </div>
-              )) || (
+              ))}
+              {analytics.length === 0 && (
                 <p className="text-gray-400 text-sm">No recent activity</p>
               )}
             </div>
@@ -265,8 +270,8 @@ function getWeeklyData(analytics: any[]) {
   const data = days.map(day => ({ day, views: 0 }))
 
   analytics.forEach(event => {
-    if (event.event_type === 'view') {
-      const date = new Date(event.created_at)
+    if (event.eventType === 'view') {
+      const date = new Date(event.createdAt)
       const dayIndex = (date.getDay() + 6) % 7 // Convert Sunday=0 to Monday=0
       data[dayIndex].views++
     }

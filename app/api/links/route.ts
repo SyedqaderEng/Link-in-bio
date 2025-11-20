@@ -1,6 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/session'
+import { prisma } from '@/lib/prisma'
 
+// GET /api/links - Get links for a user (public or authenticated)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -10,26 +12,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Username required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', username)
-      .single()
+    const profile = await prisma.profile.findUnique({
+      where: { username },
+      select: { id: true },
+    })
 
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    const { data: links, error } = await supabase
-      .from('links')
-      .select('*')
-      .eq('user_id', profile.id)
-      .eq('is_active', true)
-      .order('position', { ascending: true })
-
-    if (error) throw error
+    const links = await prisma.link.findMany({
+      where: {
+        userId: profile.id,
+        isActive: true,
+      },
+      orderBy: { position: 'asc' },
+    })
 
     return NextResponse.json({ links })
   } catch (error: any) {
@@ -41,38 +39,45 @@ export async function GET(request: Request) {
   }
 }
 
+// POST /api/links - Create a new link
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await getSession()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { title, url, icon, position, is_active } = body
+    const { title, url, icon, position, isActive, scheduledStart, scheduledEnd } = body
 
     if (!title || !url) {
       return NextResponse.json({ error: 'Title and URL required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
-      .from('links')
-      .insert({
-        user_id: user.id,
+    // Get the current max position for this user
+    const maxPositionLink = await prisma.link.findFirst({
+      where: { userId: user.id },
+      orderBy: { position: 'desc' },
+      select: { position: true },
+    })
+
+    const newPosition = position !== undefined ? position : (maxPositionLink?.position || 0) + 1
+
+    const link = await prisma.link.create({
+      data: {
+        userId: user.id,
         title,
         url,
         icon,
-        position: position || 0,
-        is_active: is_active !== false,
-      })
-      .select()
-      .single()
+        position: newPosition,
+        isActive: isActive !== false,
+        scheduledStart: scheduledStart ? new Date(scheduledStart) : null,
+        scheduledEnd: scheduledEnd ? new Date(scheduledEnd) : null,
+      },
+    })
 
-    if (error) throw error
-
-    return NextResponse.json({ link: data })
+    return NextResponse.json({ link })
   } catch (error: any) {
     console.error('Create link error:', error)
     return NextResponse.json(

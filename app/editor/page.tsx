@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Plus, GripVertical, Trash2, Eye, EyeOff, ExternalLink, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -12,8 +11,8 @@ interface Link {
   url: string
   icon: string | null
   position: number
-  is_active: boolean
-  click_count: number
+  isActive: boolean
+  clickCount: number
 }
 
 export default function EditorPage() {
@@ -21,7 +20,6 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
@@ -30,20 +28,19 @@ export default function EditorPage() {
 
   const loadLinks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const response = await fetch('/api/auth/me')
+      if (!response.ok) {
         router.push('/auth/login')
         return
       }
 
-      const { data, error } = await supabase
-        .from('links')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('position', { ascending: true })
+      const { user } = await response.json()
 
-      if (error) throw error
-      setLinks(data || [])
+      const linksResponse = await fetch(`/api/links?username=${user.username}`)
+      if (!linksResponse.ok) throw new Error('Failed to load links')
+
+      const { links: userLinks } = await linksResponse.json()
+      setLinks(userLinks || [])
     } catch (error) {
       console.error('Error loading links:', error)
     } finally {
@@ -58,8 +55,8 @@ export default function EditorPage() {
       url: 'https://',
       icon: '🔗',
       position: links.length,
-      is_active: true,
-      click_count: 0,
+      isActive: true,
+      clickCount: 0,
     }
     setLinks([...links, newLink])
   }
@@ -75,12 +72,11 @@ export default function EditorPage() {
 
     if (!link.id.startsWith('temp-')) {
       try {
-        const { error } = await supabase
-          .from('links')
-          .delete()
-          .eq('id', link.id)
+        const response = await fetch(`/api/links/${link.id}`, {
+          method: 'DELETE',
+        })
 
-        if (error) throw error
+        if (!response.ok) throw new Error('Failed to delete link')
       } catch (error) {
         console.error('Error deleting link:', error)
         alert('Failed to delete link')
@@ -93,20 +89,16 @@ export default function EditorPage() {
   }
 
   const toggleActive = (index: number) => {
-    updateLink(index, 'is_active', !links[index].is_active)
+    updateLink(index, 'isActive', !links[index].isActive)
   }
 
   const saveAllLinks = async () => {
     setSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
       // Update positions
       const linksToSave = links.map((link, index) => ({
         ...link,
         position: index,
-        user_id: user.id,
       }))
 
       // Separate new and existing links
@@ -114,24 +106,27 @@ export default function EditorPage() {
       const existingLinks = linksToSave.filter(link => !link.id.startsWith('temp-'))
 
       // Insert new links
-      if (newLinks.length > 0) {
-        const { data, error } = await supabase
-          .from('links')
-          .insert(newLinks.map(({ id, ...link }) => link))
-          .select()
+      for (const link of newLinks) {
+        const { id, clickCount, ...linkData } = link
+        const response = await fetch('/api/links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(linkData),
+        })
 
-        if (error) throw error
+        if (!response.ok) throw new Error('Failed to create link')
       }
 
       // Update existing links
       for (const link of existingLinks) {
-        const { id, user_id, ...updateData } = link
-        const { error } = await supabase
-          .from('links')
-          .update(updateData)
-          .eq('id', id)
+        const { id, clickCount, ...updateData } = link
+        const response = await fetch(`/api/links/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        })
 
-        if (error) throw error
+        if (!response.ok) throw new Error('Failed to update link')
       }
 
       // Reload links
@@ -244,7 +239,7 @@ export default function EditorPage() {
 
                   {/* Stats */}
                   <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span>{link.click_count} clicks</span>
+                    <span>{link.clickCount} clicks</span>
                     <span>•</span>
                     <span>Position {index + 1}</span>
                   </div>
@@ -255,13 +250,13 @@ export default function EditorPage() {
                   <button
                     onClick={() => toggleActive(index)}
                     className={`p-2 rounded-lg transition ${
-                      link.is_active
+                      link.isActive
                         ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
                         : 'bg-gray-500/20 text-gray-500 hover:bg-gray-500/30'
                     }`}
-                    title={link.is_active ? 'Active' : 'Inactive'}
+                    title={link.isActive ? 'Active' : 'Inactive'}
                   >
-                    {link.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    {link.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                   </button>
 
                   {link.url && !link.url.startsWith('https://') && link.url !== 'https://' && (
