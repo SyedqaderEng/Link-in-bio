@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - LinkBio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #2d3748; }
+        
+        .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; color: white; }
+        .logo { font-size: 24px; font-weight: 800; margin-bottom: 40px; padding: 0 10px; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 14px 16px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; transition: all 0.3s; font-weight: 500; }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.2); color: white; }
+        .nav-icon { font-size: 20px; }
+        
+        .user-profile { position: absolute; bottom: 30px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #667eea; }
+        .user-info { flex: 1; }
+        .user-name { font-weight: 600; font-size: 14px; }
+        .user-email { font-size: 12px; opacity: 0.8; }
+        
+        .main-content { margin-left: 260px; padding: 30px; }
+        .header { margin-bottom: 40px; }
+        .header h1 { font-size: 32px; font-weight: 700; color: #1a202c; margin-bottom: 8px; }
+        .header p { color: #718096; font-size: 15px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-title { font-size: 14px; color: #718096; margin-bottom: 12px; font-weight: 500; }
+        .stat-value { font-size: 36px; font-weight: 700; color: #1a202c; margin-bottom: 8px; }
+        .stat-change { font-size: 13px; color: #48bb78; }
+        
+        .chart-container { background: white; border-radius: 16px; padding: 28px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chart-container h2 { font-size: 20px; margin-bottom: 24px; color: #1a202c; }
+        .chart-placeholder { height: 300px; background: linear-gradient(135deg, #667eea20, #764ba220); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #718096; font-size: 48px; }
+        
+        .top-links { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .link-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #e2e8f0; }
+        .link-row:last-child { border-bottom: none; }
+        .link-name { font-weight: 600; font-size: 15px; }
+        .link-url { font-size: 13px; color: #718096; }
+        .link-clicks { font-size: 18px; font-weight: 700; color: #667eea; }
+        
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">LinkBio</div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span><span>Dashboard</span></a></li>
+            <li class="nav-item"><a href="editor.html" class="nav-link"><span class="nav-icon">🔗</span><span>My Links</span></a></li>
+            <li class="nav-item"><a href="themes.html" class="nav-link"><span class="nav-icon">🎨</span><span>Themes</span></a></li>
+            <li class="nav-item"><a href="analytics.html" class="nav-link active"><span class="nav-icon">📈</span><span>Analytics</span></a></li>
+            <li class="nav-item"><a href="settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Settings</span></a></li>
+        </ul>
+        <div class="user-profile">
+            <div class="user-avatar">JD</div>
+            <div class="user-info">
+                <div class="user-name">John Doe</div>
+                <div class="user-email">john@example.com</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Analytics</h1>
+            <p>Track your performance and understand your audience</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Page Views</div>
+                <div class="stat-value">24,891</div>
+                <div class="stat-change">↑ 18.2% from last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total Clicks</div>
+                <div class="stat-value">7,684</div>
+                <div class="stat-change">↑ 12.5% from last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Avg. Click Rate</div>
+                <div class="stat-value">30.8%</div>
+                <div class="stat-change">↑ 4.2% from last month</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Unique Visitors</div>
+                <div class="stat-value">18,234</div>
+                <div class="stat-change">↑ 15.7% from last month</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Views Over Time</h2>
+            <div class="chart-placeholder">📊</div>
+        </div>
+
+        <div class="top-links">
+            <h2 style="font-size: 20px; margin-bottom: 24px; color: #1a202c;">Top Performing Links</h2>
+            <div class="link-row">
+                <div>
+                    <div class="link-name">🎨 My Portfolio</div>
+                    <div class="link-url">portfolio.com</div>
+                </div>
+                <div class="link-clicks">2,341 clicks</div>
+            </div>
+            <div class="link-row">
+                <div>
+                    <div class="link-name">🛍️ Shop My Designs</div>
+                    <div class="link-url">shop.example.com</div>
+                </div>
+                <div class="link-clicks">1,892 clicks</div>
+            </div>
+            <div class="link-row">
+                <div>
+                    <div class="link-name">📧 Newsletter</div>
+                    <div class="link-url">newsletter.example.com</div>
+                </div>
+                <div class="link-clicks">1,234 clicks</div>
+            </div>
+            <div class="link-row">
+                <div>
+                    <div class="link-name">🎓 Free Course</div>
+                    <div class="link-url">course.example.com</div>
+                </div>
+                <div class="link-clicks">987 clicks</div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

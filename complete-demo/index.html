@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkBio - Beautiful Link in Bio Pages for Creators</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, white, rgba(255,255,255,0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 5% 120px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 80px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Features Section */
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 80px 5%;
+            margin: 0 5%;
+            border-radius: 30px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            opacity: 0.9;
+            font-size: 15px;
+        }
+
+        /* Themes Preview */
+        .themes-preview {
+            padding: 100px 5%;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .theme-preview {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .theme-preview:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .theme-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .theme-preview h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .theme-preview p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 5%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .pricing-card.featured {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid white;
+            transform: scale(1.05);
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        .price span {
+            font-size: 18px;
+            opacity: 0.8;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .features-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .features-list li:before {
+            content: "✓ ";
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* CTA Section */
+        .cta {
+            text-align: center;
+            padding: 100px 5%;
+        }
+
+        .cta h2 {
+            font-size: 48px;
+            margin-bottom: 24px;
+        }
+
+        .cta p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 40px 5%;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">LinkBio</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#themes">Themes</a>
+            <a href="#pricing">Pricing</a>
+            <a href="login.html" class="btn btn-secondary">Login</a>
+            <a href="signup.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>One Link.<br>Infinite Possibilities.</h1>
+        <p>The most beautiful way to share all your links. Stand out from the crowd with stunning themes that convert.</p>
+
+        <div class="hero-buttons">
+            <a href="signup.html" class="btn btn-primary">Start Free Trial</a>
+            <a href="#themes" class="btn btn-secondary">View Themes</a>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number">50K+</div>
+                <div class="stat-label">Creators</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">2M+</div>
+                <div class="stat-label">Links Clicked</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">99%</div>
+                <div class="stat-label">Satisfaction</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">Everything You Need to Succeed</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Beautiful Themes</h3>
+                <p>Choose from 4 professionally designed themes or customize your own. Stand out with glassmorphic, minimal, or vibrant designs.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>Track every click, view your top performing links, and understand your audience with detailed analytics.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Lightning Fast</h3>
+                <p>Your page loads in under 1 second. No bloat, just pure performance that converts visitors into followers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Unlimited Links</h3>
+                <p>Add as many links as you want. Organize them with drag-and-drop, add icons, and schedule them for later.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Custom Domain</h3>
+                <p>Use your own domain or get a free yourusername.linkbio.com subdomain. SSL included.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Mobile Optimized</h3>
+                <p>Looks perfect on every device. Touch-friendly buttons and responsive design that works everywhere.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Themes Preview -->
+    <section class="themes-preview" id="themes">
+        <h2 class="section-title">Choose Your Style</h2>
+        <div class="themes-grid">
+            <div class="theme-preview">
+                <div class="theme-icon">🎨</div>
+                <h3>Glassmorphic Modern</h3>
+                <p>Perfect for tech creators and designers</p>
+            </div>
+            <div class="theme-preview">
+                <div class="theme-icon">🧘</div>
+                <h3>Minimalist Calm</h3>
+                <p>Ideal for wellness and lifestyle brands</p>
+            </div>
+            <div class="theme-preview">
+                <div class="theme-icon">🎵</div>
+                <h3>Bold & Vibrant</h3>
+                <p>Made for musicians and artists</p>
+            </div>
+            <div class="theme-preview">
+                <div class="theme-icon">🌿</div>
+                <h3>Nature Inspired</h3>
+                <p>Great for eco brands and artisans</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <div class="pricing-cards">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0<span>/month</span></div>
+                <ul class="features-list">
+                    <li>1 Theme</li>
+                    <li>Unlimited Links</li>
+                    <li>Basic Analytics</li>
+                    <li>LinkBio Branding</li>
+                    <li>Mobile Responsive</li>
+                </ul>
+                <a href="signup.html" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <h3>Pro</h3>
+                <div class="price">$6<span>/month</span></div>
+                <ul class="features-list">
+                    <li>All 4 Themes</li>
+                    <li>Unlimited Links</li>
+                    <li>Advanced Analytics</li>
+                    <li>Remove Branding</li>
+                    <li>Custom Domain</li>
+                    <li>Priority Support</li>
+                    <li>Link Scheduling</li>
+                </ul>
+                <a href="signup.html" class="btn btn-primary" style="width: 100%;">Start Free Trial</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <h2>Ready to stand out?</h2>
+        <p>Join 50,000+ creators using LinkBio to grow their audience</p>
+        <a href="signup.html" class="btn btn-primary" style="font-size: 18px; padding: 16px 40px;">Get Started Free</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 LinkBio. All rights reserved.</p>
+    </footer>
+</body>
+</html>
