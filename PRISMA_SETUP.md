@@ -9,6 +9,13 @@ This project is now configured with Prisma ORM for type-safe database access.
 cp local.env .env
 ```
 
+The `.env` file must contain:
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/linkbio"
+```
+
+**Important**: Use quotes around the DATABASE_URL value.
+
 ### 2. Generate Prisma Client
 ```bash
 npm run prisma:generate
