@@ -1,43 +1,47 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/DashboardLayout'
 import { Eye, MousePointerClick, Share2, TrendingUp, TrendingDown } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
+import { getSession } from '@/lib/session'
+import { prisma } from '@/lib/prisma'
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getSession()
   if (!user) redirect('/auth/login')
 
   // Get analytics for different time periods
   const now = new Date()
-  const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
   const prev30Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
 
-  const { data: currentPeriod } = await supabase
-    .from('analytics')
-    .select('*')
-    .eq('user_id', user.id)
-    .gte('created_at', last30Days.toISOString())
+  const currentPeriod = await prisma.analytics.findMany({
+    where: {
+      userId: user.id,
+      createdAt: {
+        gte: last30Days,
+      },
+    },
+  })
 
-  const { data: previousPeriod } = await supabase
-    .from('analytics')
-    .select('*')
-    .eq('user_id', user.id)
-    .gte('created_at', prev30Days.toISOString())
-    .lt('created_at', last30Days.toISOString())
+  const previousPeriod = await prisma.analytics.findMany({
+    where: {
+      userId: user.id,
+      createdAt: {
+        gte: prev30Days,
+        lt: last30Days,
+      },
+    },
+  })
 
   // Calculate metrics
-  const currentViews = currentPeriod?.filter(a => a.event_type === 'view').length || 0
-  const currentClicks = currentPeriod?.filter(a => a.event_type === 'click').length || 0
-  const currentShares = currentPeriod?.filter(a => a.event_type === 'share').length || 0
+  const currentViews = currentPeriod.filter(a => a.eventType === 'view').length
+  const currentClicks = currentPeriod.filter(a => a.eventType === 'click').length
+  const currentShares = currentPeriod.filter(a => a.eventType === 'share').length
   const currentCTR = currentViews > 0 ? (currentClicks / currentViews) * 100 : 0
 
-  const previousViews = previousPeriod?.filter(a => a.event_type === 'view').length || 0
-  const previousClicks = previousPeriod?.filter(a => a.event_type === 'click').length || 0
-  const previousShares = previousPeriod?.filter(a => a.event_type === 'share').length || 0
+  const previousViews = previousPeriod.filter(a => a.eventType === 'view').length
+  const previousClicks = previousPeriod.filter(a => a.eventType === 'click').length
+  const previousShares = previousPeriod.filter(a => a.eventType === 'share').length
   const previousCTR = previousViews > 0 ? (previousClicks / previousViews) * 100 : 0
 
   const viewsChange = calculateChange(currentViews, previousViews)
@@ -46,18 +50,17 @@ export default async function AnalyticsPage() {
   const ctrChange = calculateChange(currentCTR, previousCTR)
 
   // Get top performing links
-  const { data: links } = await supabase
-    .from('links')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('click_count', { ascending: false })
-    .limit(10)
+  const links = await prisma.link.findMany({
+    where: { userId: user.id },
+    orderBy: { clickCount: 'desc' },
+    take: 10,
+  })
 
   // Get geographic data
-  const countries = getTopCountries(currentPeriod || [])
+  const countries = getTopCountries(currentPeriod)
 
   // Get daily data for chart
-  const dailyData = getDailyData(currentPeriod || [], 30)
+  const dailyData = getDailyData(currentPeriod, 30)
 
   return (
     <DashboardLayout>
@@ -158,7 +161,7 @@ export default async function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {links?.map((link, index) => (
+                {links.map((link, index) => (
                   <tr key={link.id} className="border-b border-dark-border/50 hover:bg-white/5">
                     <td className="py-4">
                       <div className="text-2xl font-bold text-gray-600">#{index + 1}</div>
@@ -168,14 +171,14 @@ export default async function AnalyticsPage() {
                       <div className="text-sm text-gray-400 truncate max-w-md">{link.url}</div>
                     </td>
                     <td className="py-4">
-                      <div className="text-xl font-bold gradient-text">{formatNumber(link.click_count)}</div>
+                      <div className="text-xl font-bold gradient-text">{formatNumber(link.clickCount)}</div>
                     </td>
                     <td className="py-4">
                       <div className="w-32 h-2 bg-white/5 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-vibrant"
                           style={{
-                            width: `${links[0].click_count > 0 ? (link.click_count / links[0].click_count) * 100 : 0}%`
+                            width: `${links[0].clickCount > 0 ? (link.clickCount / links[0].clickCount) * 100 : 0}%`
                           }}
                         />
                       </div>
@@ -278,13 +281,13 @@ function getDailyData(analytics: any[], days: number) {
     const dateStr = date.toISOString().split('T')[0]
 
     const dayAnalytics = analytics.filter(a =>
-      a.created_at.startsWith(dateStr)
+      a.createdAt.toISOString().startsWith(dateStr)
     )
 
     data.push({
       day: date.getDate().toString(),
-      views: dayAnalytics.filter(a => a.event_type === 'view').length,
-      clicks: dayAnalytics.filter(a => a.event_type === 'click').length,
+      views: dayAnalytics.filter(a => a.eventType === 'view').length,
+      clicks: dayAnalytics.filter(a => a.eventType === 'click').length,
     })
   }
 

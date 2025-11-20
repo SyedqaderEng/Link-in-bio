@@ -1,37 +1,47 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/session'
+import { prisma } from '@/lib/prisma'
 
+// GET /api/profile?username=xxx - Get public profile (or authenticated user's profile)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get('username')
 
-    if (!username) {
-      return NextResponse.json({ error: 'Username required' }, { status: 400 })
+    if (username) {
+      // Public profile fetch
+      const profile = await prisma.profile.findUnique({
+        where: { username },
+        include: {
+          theme: true,
+        },
+      })
+
+      if (!profile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      }
+
+      return NextResponse.json({ profile })
+    } else {
+      // Authenticated user's profile
+      const user = await getSession()
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        include: {
+          theme: true,
+        },
+      })
+
+      if (!profile) {
+        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      }
+
+      return NextResponse.json({ profile })
     }
-
-    const supabase = await createClient()
-
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        themes (
-          name,
-          slug,
-          config
-        )
-      `)
-      .eq('username', username)
-      .single()
-
-    if (error) throw error
-
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
-
-    return NextResponse.json({ profile })
   } catch (error: any) {
     console.error('Profile API error:', error)
     return NextResponse.json(
@@ -41,39 +51,59 @@ export async function GET(request: Request) {
   }
 }
 
+// PUT /api/profile - Update authenticated user's profile
 export async function PUT(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await getSession()
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { username, display_name, bio, avatar_url, theme_id, custom_css, custom_domain } = body
+    const { username, displayName, bio, avatarUrl, themeId, customCss, customDomain } = body
 
     const updateData: any = {}
     if (username !== undefined) updateData.username = username
-    if (display_name !== undefined) updateData.display_name = display_name
+    if (displayName !== undefined) updateData.displayName = displayName
     if (bio !== undefined) updateData.bio = bio
-    if (avatar_url !== undefined) updateData.avatar_url = avatar_url
-    if (theme_id !== undefined) updateData.theme_id = theme_id
-    if (custom_css !== undefined) updateData.custom_css = custom_css
-    if (custom_domain !== undefined) updateData.custom_domain = custom_domain
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
+    if (themeId !== undefined) updateData.themeId = themeId
+    if (customCss !== undefined) updateData.customCss = customCss
+    if (customDomain !== undefined) updateData.customDomain = customDomain
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', user.id)
-      .select()
-      .single()
+    const profile = await prisma.profile.update({
+      where: { id: user.id },
+      data: updateData,
+    })
 
-    if (error) throw error
-
-    return NextResponse.json({ profile: data })
+    return NextResponse.json({ profile })
   } catch (error: any) {
     console.error('Update profile error:', error)
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/profile - Delete authenticated user's account
+export async function DELETE(request: Request) {
+  try {
+    const user = await getSession()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Delete profile (cascades to links and analytics via Prisma schema)
+    await prisma.profile.delete({
+      where: { id: user.id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Delete profile error:', error)
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
