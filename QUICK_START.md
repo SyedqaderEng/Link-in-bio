@@ -11,9 +11,9 @@
 ### 1. Clone and Install
 ```bash
 # Pull latest changes
-git pull origin claude/research-demo-project-01TCpN9BpCZsSCwzUTSoGXf5
+git pull origin claude/setup-prisma-5-01TCpN9BpCZsSCwzUTSoGXf5
 
-# Install dependencies (will auto-generate Prisma client)
+# Install dependencies (will auto-generate Prisma Client v5.22.0)
 npm install
 ```
 
@@ -23,9 +23,18 @@ npm install
 cp local.env .env
 ```
 
-Your `.env` file should contain:
+Your `.env` file will contain:
 ```env
+# Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/linkbio"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="iCSwQh3kkMxDaL71FCyURjmfFZUu71pK9ZoWHlwdevM="
+
+# App Configuration
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_NAME="LinkBio"
 ```
 
 ### 3. Verify Prisma Setup
