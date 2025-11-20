@@ -47,8 +47,8 @@ A modern, fully-featured link-in-bio platform built to compete with lnk.bio and 
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS v4, Custom CSS
 - **Backend**: Next.js API Routes, Server Components
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth (Email, Google, GitHub)
+- **Database**: PostgreSQL (Local or Supabase)
+- **Authentication**: JWT + bcrypt
 - **Payments**: Stripe
 - **Email**: Resend
 - **Deployment**: Vercel
@@ -58,7 +58,7 @@ A modern, fully-featured link-in-bio platform built to compete with lnk.bio and 
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd linkbio-app
+cd Link-in-bio
 ```
 
 2. **Install dependencies**
@@ -66,50 +66,32 @@ cd linkbio-app
 npm install
 ```
 
-3. **Set up environment variables**
+3. **Set up environment**
 ```bash
-cp .env.local.example .env.local
+# For local development
+cp local.env .env
+
+# For production
+cp prod.env .env
+# Then edit .env with your credentials
 ```
 
-Edit `.env.local` with your credentials:
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Resend
-RESEND_API_KEY=re_...
-
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key
-```
-
-4. **Set up Supabase database**
+4. **Initialize database**
 ```bash
-# Run the SQL schema in your Supabase SQL Editor
-cat supabase/schema.sql
+npm run init-db
 ```
 
-5. **Configure Stripe**
-- Create products in Stripe Dashboard:
-  - Pro Plan: $6/month recurring
-  - Lifetime Plan: $49 one-time payment
-- Add price IDs to your Stripe configuration
-- Set up webhook endpoint: `https://yourdomain.com/api/stripe/webhook`
-
-6. **Run development server**
+5. **Run development server**
 ```bash
 npm run dev
 ```
 
 Visit `http://localhost:3000`
+
+**Test Account:**
+- Email: test@example.com
+- Password: testpass123
+- Profile: http://localhost:3000/testuser
 
 ## 🗄️ Database Schema
 
