@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionTier {
+  free
+  pro
+  lifetime
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+}
+
+enum AnalyticsEventType {
+  view
+  click
+  share
+}
+
+model Profile {
+  id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email             String         @unique
+  passwordHash      String?        @map("password_hash")
+  username          String         @unique
+  displayName       String?        @map("display_name")
+  bio               String?
+  avatarUrl         String?        @map("avatar_url")
+  themeId           String?        @map("theme_id") @db.Uuid
+  customCss         String?        @map("custom_css")
+  isPremium         Boolean        @default(false) @map("is_premium")
+  subscriptionTier  SubscriptionTier @default(free) @map("subscription_tier")
+  customDomain      String?        @unique @map("custom_domain")
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  links             Link[]
+  analytics         Analytics[]
+  subscription      Subscription?
+  theme             Theme?         @relation(fields: [themeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("profiles")
+  @@index([username])
+  @@index([email])
+  @@index([customDomain])
+}
+
+model Link {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  title           String
+  url             String
+  icon            String?
+  position        Int          @default(0)
+  isActive        Boolean      @default(true) @map("is_active")
+  scheduledStart  DateTime?    @map("scheduled_start") @db.Timestamptz
+  scheduledEnd    DateTime?    @map("scheduled_end") @db.Timestamptz
+  clickCount      Int          @default(0) @map("click_count")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user            Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analytics       Analytics[]
+
+  @@map("links")
+  @@index([userId])
+  @@index([position])
+}
+
+model Analytics {
+  id          String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  linkId      String?             @map("link_id") @db.Uuid
+  userId      String              @map("user_id") @db.Uuid
+  eventType   AnalyticsEventType  @map("event_type")
+  referrer    String?
+  country     String?
+  city        String?
+  device      String?
+  browser     String?
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  link        Link?               @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  user        Profile             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+  @@index([userId])
+  @@index([linkId])
+  @@index([createdAt])
+}
+
+model Theme {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String
+  slug        String    @unique
+  description String?
+  previewUrl  String?   @map("preview_url")
+  config      Json      @default("{}")
+  isPremium   Boolean   @default(false) @map("is_premium")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  profiles    Profile[]
+
+  @@map("themes")
+}
+
+model Subscription {
+  id                    String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId                String              @unique @map("user_id") @db.Uuid
+  stripeCustomerId      String?             @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?             @unique @map("stripe_subscription_id")
+  stripePriceId         String?             @map("stripe_price_id")
+  tier                  SubscriptionTier    @default(free)
+  status                SubscriptionStatus  @default(active)
+  currentPeriodStart    DateTime?           @map("current_period_start") @db.Timestamptz
+  currentPeriodEnd      DateTime?           @map("current_period_end") @db.Timestamptz
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user                  Profile             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
