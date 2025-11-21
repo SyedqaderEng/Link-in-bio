@@ -1,21 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import DashboardLayout from '@/components/DashboardLayout'
-import { User, Mail, Lock, Globe, CreditCard, Trash2, Save } from 'lucide-react'
+import { User, Mail, Lock, Globe, CreditCard, Trash2, Save, QrCode, Download, Share2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import QRCode from 'qrcode'
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [formData, setFormData] = useState({
     username: '',
-    display_name: '',
+    displayName: '',
     bio: '',
-    avatar_url: '',
-    custom_domain: '',
+    avatarUrl: '',
+    customDomain: '',
   })
   const [passwords, setPasswords] = useState({
     current: '',
@@ -23,36 +24,34 @@ export default function SettingsPage() {
     confirm: '',
   })
 
-  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
     loadProfile()
   }, [])
 
+  useEffect(() => {
+    if (profile?.username) {
+      generateQRCode()
+    }
+  }, [profile])
+
   const loadProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const response = await fetch('/api/profile')
+      if (!response.ok) {
         router.push('/auth/login')
         return
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (error) throw error
-
-      setProfile(data)
+      const { profile } = await response.json()
+      setProfile(profile)
       setFormData({
-        username: data.username || '',
-        display_name: data.display_name || '',
-        bio: data.bio || '',
-        avatar_url: data.avatar_url || '',
-        custom_domain: data.custom_domain || '',
+        username: profile.username || '',
+        displayName: profile.displayName || '',
+        bio: profile.bio || '',
+        avatarUrl: profile.avatarUrl || '',
+        customDomain: profile.customDomain || '',
       })
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -61,18 +60,65 @@ export default function SettingsPage() {
     }
   }
 
+  const generateQRCode = async () => {
+    try {
+      const profileUrl = `${window.location.origin}/${profile.username}`
+      const qr = await QRCode.toDataURL(profileUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      })
+      setQrCodeUrl(qr)
+    } catch (error) {
+      console.error('Error generating QR code:', error)
+    }
+  }
+
+  const downloadQRCode = () => {
+    if (!qrCodeUrl) return
+
+    const link = document.createElement('a')
+    link.href = qrCodeUrl
+    link.download = `${profile.username}-qrcode.png`
+    link.click()
+  }
+
+  const shareProfile = async () => {
+    const profileUrl = `${window.location.origin}/${profile.username}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${profile.displayName || profile.username}'s Links`,
+          text: profile.bio || 'Check out my links!',
+          url: profileUrl,
+        })
+      } catch (error) {
+        console.error('Error sharing:', error)
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(profileUrl)
+      alert('Profile link copied to clipboard!')
+    }
+  }
+
   const handleSaveProfile = async () => {
     setSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(formData)
-        .eq('id', user.id)
-
-      if (error) throw error
+      if (!response.ok) {
+        const { error } = await response.json()
+        throw new Error(error)
+      }
 
       alert('Profile updated successfully!')
       loadProfile()
@@ -97,13 +143,9 @@ export default function SettingsPage() {
 
     setSaving(true)
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwords.new,
-      })
-
-      if (error) throw error
-
-      alert('Password updated successfully!')
+      // Since we're using local auth, we need to call a password change API
+      // For now, let's just show a success message
+      alert('Password change functionality coming soon!')
       setPasswords({ current: '', new: '', confirm: '' })
     } catch (error: any) {
       console.error('Error changing password:', error)
@@ -126,19 +168,14 @@ export default function SettingsPage() {
 
     setSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const response = await fetch('/api/profile', {
+        method: 'DELETE',
+      })
 
-      // Delete profile (cascades to links and analytics)
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id)
+      if (!response.ok) throw new Error('Failed to delete account')
 
-      if (error) throw error
-
-      // Sign out
-      await supabase.auth.signOut()
+      // Clear session and redirect
+      await fetch('/api/auth/logout', { method: 'POST' })
       router.push('/')
     } catch (error: any) {
       console.error('Error deleting account:', error)
@@ -169,6 +206,52 @@ export default function SettingsPage() {
           <p className="text-gray-400">Manage your account and preferences</p>
         </div>
 
+        {/* Profile URL & QR Code */}
+        <div className="glass p-8 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Share2 className="w-6 h-6 text-primary-cyan" />
+            <h2 className="text-2xl font-bold">Share Your Profile</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Profile URL */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Your Profile Link</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/${formData.username}`}
+                  readOnly
+                  className="flex-1 px-4 py-3 bg-white/5 border border-dark-border rounded-lg focus:outline-none"
+                />
+                <button
+                  onClick={shareProfile}
+                  className="px-4 py-3 bg-primary-cyan rounded-lg hover:opacity-90 transition"
+                  title="Share"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* QR Code */}
+            <div className="flex flex-col items-center">
+              <label className="block text-sm font-medium mb-2">QR Code</label>
+              {qrCodeUrl && (
+                <div className="relative group">
+                  <img src={qrCodeUrl} alt="QR Code" className="w-32 h-32 rounded-lg border-2 border-primary-cyan" />
+                  <button
+                    onClick={downloadQRCode}
+                    className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition"
+                  >
+                    <Download className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Profile Settings */}
         <div className="glass p-8 rounded-2xl mb-6">
           <div className="flex items-center gap-3 mb-6">
@@ -187,7 +270,7 @@ export default function SettingsPage() {
                 pattern="[a-z0-9_-]+"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Your page: {window.location.origin}/{formData.username}
+                Your page: {typeof window !== 'undefined' ? window.location.origin : ''}/{formData.username}
               </p>
             </div>
 
@@ -195,8 +278,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">Display Name</label>
               <input
                 type="text"
-                value={formData.display_name}
-                onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                value={formData.displayName}
+                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                 className="w-full px-4 py-3 bg-white/5 border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-cyan"
               />
             </div>
@@ -219,8 +302,8 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">Avatar URL</label>
               <input
                 type="url"
-                value={formData.avatar_url}
-                onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+                value={formData.avatarUrl}
+                onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                 className="w-full px-4 py-3 bg-white/5 border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-cyan"
                 placeholder="https://example.com/avatar.jpg"
               />
@@ -250,14 +333,14 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <input
               type="text"
-              value={formData.custom_domain}
-              onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
+              value={formData.customDomain}
+              onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
               className="w-full px-4 py-3 bg-white/5 border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-cyan"
               placeholder="yourdomain.com"
-              disabled={!profile?.is_premium}
+              disabled={!profile?.isPremium}
             />
             <p className="text-sm text-gray-400">
-              {profile?.is_premium
+              {profile?.isPremium
                 ? 'Connect your custom domain to use it for your profile page'
                 : 'Upgrade to Pro to use a custom domain'}
             </p>
@@ -308,15 +391,15 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-lg font-semibold">
-                Current Plan: <span className="gradient-text">{profile?.subscription_tier?.toUpperCase() || 'FREE'}</span>
+                Current Plan: <span className="gradient-text">{profile?.subscriptionTier?.toUpperCase() || 'FREE'}</span>
               </p>
               <p className="text-sm text-gray-400 mt-1">
-                {profile?.is_premium
+                {profile?.isPremium
                   ? 'Enjoy unlimited features and priority support'
                   : 'Upgrade to unlock advanced features'}
               </p>
             </div>
-            {!profile?.is_premium && (
+            {!profile?.isPremium && (
               <button className="px-6 py-3 bg-gradient-vibrant rounded-lg font-semibold hover:opacity-90 transition">
                 Upgrade Now
               </button>
