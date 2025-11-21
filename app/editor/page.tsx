@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, GripVertical, Trash2, Eye, EyeOff, ExternalLink, Save } from 'lucide-react'
+import { Plus, GripVertical, Trash2, Eye, EyeOff, ExternalLink, Save, RefreshCw, Image as ImageIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Link {
@@ -13,6 +13,16 @@ interface Link {
   position: number
   isActive: boolean
   clickCount: number
+  thumbnail?: string | null
+  description?: string | null
+}
+
+interface LinkMetadata {
+  title?: string
+  description?: string
+  image?: string
+  icon?: string
+  url: string
 }
 
 export default function EditorPage() {
@@ -20,6 +30,7 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [fetchingMetadata, setFetchingMetadata] = useState<Record<number, boolean>>({})
   const router = useRouter()
 
   useEffect(() => {
@@ -65,6 +76,47 @@ export default function EditorPage() {
     const newLinks = [...links]
     newLinks[index] = { ...newLinks[index], [field]: value }
     setLinks(newLinks)
+  }
+
+  const fetchMetadata = async (index: number) => {
+    const link = links[index]
+    if (!link.url || link.url === 'https://') return
+
+    // Validate URL
+    try {
+      new URL(link.url)
+    } catch {
+      return
+    }
+
+    setFetchingMetadata(prev => ({ ...prev, [index]: true }))
+
+    try {
+      const response = await fetch('/api/links/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: link.url }),
+      })
+
+      if (!response.ok) throw new Error('Failed to fetch metadata')
+
+      const { metadata } = await response.json() as { metadata: LinkMetadata }
+
+      // Update link with fetched metadata
+      const newLinks = [...links]
+      newLinks[index] = {
+        ...newLinks[index],
+        title: metadata.title || newLinks[index].title,
+        description: metadata.description || null,
+        thumbnail: metadata.image || null,
+        icon: metadata.icon ? '🌐' : newLinks[index].icon, // Use globe emoji as placeholder
+      }
+      setLinks(newLinks)
+    } catch (error) {
+      console.error('Error fetching metadata:', error)
+    } finally {
+      setFetchingMetadata(prev => ({ ...prev, [index]: false }))
+    }
   }
 
   const deleteLink = async (index: number) => {
@@ -228,20 +280,62 @@ export default function EditorPage() {
                     />
                   </div>
 
-                  {/* URL */}
-                  <input
-                    type="url"
-                    value={link.url}
-                    onChange={(e) => updateLink(index, 'url', e.target.value)}
-                    className="w-full px-4 py-2 bg-white/5 border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-cyan"
-                    placeholder="https://example.com"
-                  />
+                  {/* URL with Fetch Button */}
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={(e) => updateLink(index, 'url', e.target.value)}
+                      onBlur={() => fetchMetadata(index)}
+                      className="flex-1 px-4 py-2 bg-white/5 border border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-cyan"
+                      placeholder="https://example.com"
+                    />
+                    <button
+                      onClick={() => fetchMetadata(index)}
+                      disabled={fetchingMetadata[index]}
+                      className="px-4 py-2 bg-primary-cyan/20 text-primary-cyan rounded-lg hover:bg-primary-cyan/30 transition disabled:opacity-50 flex items-center gap-2"
+                      title="Fetch metadata"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${fetchingMetadata[index] ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Description (if fetched) */}
+                  {link.description && (
+                    <div className="text-sm text-gray-400 italic">
+                      {link.description}
+                    </div>
+                  )}
+
+                  {/* Thumbnail (if fetched) */}
+                  {link.thumbnail && (
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden bg-white/5">
+                      <img
+                        src={link.thumbnail}
+                        alt={link.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Hide image if it fails to load
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Stats */}
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <span>{link.clickCount} clicks</span>
                     <span>•</span>
                     <span>Position {index + 1}</span>
+                    {(link.thumbnail || link.description) && (
+                      <>
+                        <span>•</span>
+                        <span className="text-primary-cyan flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          Metadata fetched
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 

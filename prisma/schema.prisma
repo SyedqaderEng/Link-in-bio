@@ -41,6 +41,7 @@ model Profile {
   isPremium         Boolean        @default(false) @map("is_premium")
   subscriptionTier  SubscriptionTier @default(free) @map("subscription_tier")
   customDomain      String?        @unique @map("custom_domain")
+  socialLinks       Json?          @default("{}") @map("social_links")
   createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -62,6 +63,8 @@ model Link {
   title           String
   url             String
   icon            String?
+  thumbnail       String?
+  description     String?
   position        Int          @default(0)
   isActive        Boolean      @default(true) @map("is_active")
   scheduledStart  DateTime?    @map("scheduled_start") @db.Timestamptz
