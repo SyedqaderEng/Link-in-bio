@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Link2, Palette, BarChart3, Settings, LogOut, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Link2, Palette, BarChart3, Settings, LogOut, Sparkles, ShoppingBag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function Sidebar() {
@@ -12,6 +12,7 @@ export default function Sidebar() {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: Link2, label: 'My Links', href: '/editor' },
+    { icon: ShoppingBag, label: 'Products', href: '/products' },
     { icon: Sparkles, label: 'AI Chat', href: '/ai-chat' },
     { icon: Palette, label: 'Themes', href: '/themes' },
     { icon: BarChart3, label: 'Analytics', href: '/analytics' },

@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { User, Mail, Lock, Globe, CreditCard, Trash2, Save, QrCode, Download, Share2 } from 'lucide-react'
+import { User, Mail, Lock, Globe, CreditCard, Trash2, Save, QrCode, Download, Share2, Link2, Eye, Upload, FileDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import QRCode from 'qrcode'
+import SocialLinksEditor from '@/components/SocialLinksEditor'
+import { useToast } from '@/components/Toast'
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<any>(null)
@@ -17,6 +19,7 @@ export default function SettingsPage() {
     bio: '',
     avatarUrl: '',
     customDomain: '',
+    socialLinks: {} as Record<string, string>,
   })
   const [passwords, setPasswords] = useState({
     current: '',
@@ -25,6 +28,8 @@ export default function SettingsPage() {
   })
 
   const router = useRouter()
+  const toast = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadProfile()
@@ -52,6 +57,7 @@ export default function SettingsPage() {
         bio: profile.bio || '',
         avatarUrl: profile.avatarUrl || '',
         customDomain: profile.customDomain || '',
+        socialLinks: profile.socialLinks || {},
       })
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -102,7 +108,115 @@ export default function SettingsPage() {
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(profileUrl)
-      alert('Profile link copied to clipboard!')
+      toast.success('Profile link copied to clipboard!')
+    }
+  }
+
+  const previewProfile = () => {
+    const profileUrl = `${window.location.origin}/${formData.username}`
+    window.open(profileUrl, '_blank')
+  }
+
+  const exportData = async () => {
+    try {
+      // Fetch user's links
+      const linksResponse = await fetch(`/api/links?username=${profile.username}`)
+      if (!linksResponse.ok) throw new Error('Failed to fetch links')
+
+      const { links } = await linksResponse.json()
+
+      // Create export data
+      const exportData = {
+        profile: {
+          username: profile.username,
+          displayName: profile.displayName,
+          bio: profile.bio,
+          avatarUrl: profile.avatarUrl,
+          socialLinks: profile.socialLinks || {},
+        },
+        links: links.map((link: any) => ({
+          title: link.title,
+          url: link.url,
+          icon: link.icon,
+          position: link.position,
+          isActive: link.isActive,
+          thumbnail: link.thumbnail,
+          description: link.description,
+        })),
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+      }
+
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `linkbio-${profile.username}-${new Date().toISOString().split('T')[0]}.json`
+      link.click()
+      URL.revokeObjectURL(url)
+
+      toast.success('Profile data exported successfully!')
+    } catch (error: any) {
+      console.error('Export error:', error)
+      toast.error('Failed to export data')
+    }
+  }
+
+  const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+
+      // Validate data structure
+      if (!data.profile || !data.links || !Array.isArray(data.links)) {
+        throw new Error('Invalid data format')
+      }
+
+      // Update form data
+      setFormData({
+        username: data.profile.username || formData.username,
+        displayName: data.profile.displayName || '',
+        bio: data.profile.bio || '',
+        avatarUrl: data.profile.avatarUrl || '',
+        customDomain: formData.customDomain, // Keep existing custom domain
+        socialLinks: data.profile.socialLinks || {},
+      })
+
+      // Save profile
+      await handleSaveProfile()
+
+      // Delete existing links and import new ones
+      const existingLinksResponse = await fetch(`/api/links?username=${profile.username}`)
+      if (existingLinksResponse.ok) {
+        const { links: existingLinks } = await existingLinksResponse.json()
+        for (const link of existingLinks) {
+          await fetch(`/api/links/${link.id}`, { method: 'DELETE' })
+        }
+      }
+
+      // Import links
+      for (const link of data.links) {
+        await fetch('/api/links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(link),
+        })
+      }
+
+      toast.success('Profile data imported successfully! Please refresh the page.')
+      setTimeout(() => window.location.reload(), 2000)
+    } catch (error: any) {
+      console.error('Import error:', error)
+      toast.error(error.message || 'Failed to import data')
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -120,11 +234,11 @@ export default function SettingsPage() {
         throw new Error(error)
       }
 
-      alert('Profile updated successfully!')
+      toast.success('Profile updated successfully!')
       loadProfile()
     } catch (error: any) {
       console.error('Error saving profile:', error)
-      alert(error.message || 'Failed to update profile')
+      toast.error(error.message || 'Failed to update profile')
     } finally {
       setSaving(false)
     }
@@ -132,12 +246,12 @@ export default function SettingsPage() {
 
   const handleChangePassword = async () => {
     if (passwords.new !== passwords.confirm) {
-      alert('New passwords do not match')
+      toast.error('New passwords do not match')
       return
     }
 
     if (passwords.new.length < 6) {
-      alert('Password must be at least 6 characters')
+      toast.error('Password must be at least 6 characters')
       return
     }
 
@@ -145,11 +259,11 @@ export default function SettingsPage() {
     try {
       // Since we're using local auth, we need to call a password change API
       // For now, let's just show a success message
-      alert('Password change functionality coming soon!')
+      toast.info('Password change functionality coming soon!')
       setPasswords({ current: '', new: '', confirm: '' })
     } catch (error: any) {
       console.error('Error changing password:', error)
-      alert(error.message || 'Failed to change password')
+      toast.error(error.message || 'Failed to change password')
     } finally {
       setSaving(false)
     }
@@ -162,7 +276,7 @@ export default function SettingsPage() {
 
     const confirmText = prompt('Type "DELETE" to confirm:')
     if (confirmText !== 'DELETE') {
-      alert('Account deletion cancelled')
+      toast.warning('Account deletion cancelled')
       return
     }
 
@@ -176,10 +290,11 @@ export default function SettingsPage() {
 
       // Clear session and redirect
       await fetch('/api/auth/logout', { method: 'POST' })
+      toast.success('Account deleted successfully')
       router.push('/')
     } catch (error: any) {
       console.error('Error deleting account:', error)
-      alert(error.message || 'Failed to delete account')
+      toast.error(error.message || 'Failed to delete account')
     } finally {
       setSaving(false)
     }
@@ -224,6 +339,13 @@ export default function SettingsPage() {
                   readOnly
                   className="flex-1 px-4 py-3 bg-white/5 border border-dark-border rounded-lg focus:outline-none"
                 />
+                <button
+                  onClick={previewProfile}
+                  className="px-4 py-3 bg-white/10 rounded-lg hover:bg-white/20 transition"
+                  title="Preview"
+                >
+                  <Eye className="w-5 h-5" />
+                </button>
                 <button
                   onClick={shareProfile}
                   className="px-4 py-3 bg-primary-cyan rounded-lg hover:opacity-90 transition"
@@ -320,6 +442,19 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Social Links */}
+        <div className="glass p-8 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Link2 className="w-6 h-6 text-primary-cyan" />
+            <h2 className="text-2xl font-bold">Social Links</h2>
+          </div>
+
+          <SocialLinksEditor
+            socialLinks={formData.socialLinks}
+            onChange={(links) => setFormData({ ...formData, socialLinks: links })}
+          />
+        </div>
+
         {/* Custom Domain */}
         <div className="glass p-8 rounded-2xl mb-6">
           <div className="flex items-center gap-3 mb-6">
@@ -344,6 +479,49 @@ export default function SettingsPage() {
                 ? 'Connect your custom domain to use it for your profile page'
                 : 'Upgrade to Pro to use a custom domain'}
             </p>
+          </div>
+        </div>
+
+        {/* Export / Import Data */}
+        <div className="glass p-8 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <FileDown className="w-6 h-6 text-primary-cyan" />
+            <h2 className="text-2xl font-bold">Backup & Restore</h2>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-gray-400 text-sm">
+              Export your profile and links as a JSON file, or import a previously exported backup.
+            </p>
+
+            <div className="flex gap-4">
+              <button
+                onClick={exportData}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-vibrant rounded-lg font-semibold hover:opacity-90 transition"
+              >
+                <FileDown className="w-5 h-5" />
+                Export Data
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={importData}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-6 py-3 bg-white/10 rounded-lg font-semibold hover:bg-white/20 transition"
+              >
+                <Upload className="w-5 h-5" />
+                Import Data
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              <p>⚠️ Importing data will replace your current profile and links.</p>
+            </div>
           </div>
         </div>
 

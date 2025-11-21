@@ -1,7 +1,36 @@
 'use client'
 
-import { ExternalLink } from 'lucide-react'
+import {
+  ExternalLink,
+  Github,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Facebook,
+  Twitch,
+  Music,
+  Mail,
+  Globe,
+  MessageCircle,
+  DollarSign,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+
+const SOCIAL_ICONS: Record<string, any> = {
+  twitter: Twitter,
+  instagram: Instagram,
+  github: Github,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  facebook: Facebook,
+  twitch: Twitch,
+  tiktok: Music,
+  discord: MessageCircle,
+  patreon: DollarSign,
+  email: Mail,
+  website: Globe,
+}
 
 export default function GlassmorphicTheme({ profile, links }: { profile: any; links: any[] }) {
   const supabase = createClient()
@@ -39,7 +68,34 @@ export default function GlassmorphicTheme({ profile, links }: { profile: any; li
             {profile.display_name || profile.username}
           </h1>
           {profile.bio && (
-            <p className="text-white/80 text-lg">{profile.bio}</p>
+            <p className="text-white/80 text-lg mb-6">{profile.bio}</p>
+          )}
+
+          {/* Social Links */}
+          {profile.social_links && Object.keys(profile.social_links).length > 0 && (
+            <div className="flex justify-center gap-3 mt-6">
+              {Object.entries(profile.social_links as Record<string, string>).map(([platform, url]) => {
+                const Icon = SOCIAL_ICONS[platform]
+                if (!Icon || !url) return null
+                return (
+                  <a
+                    key={platform}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center transition hover:scale-110"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.15)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                    }}
+                    title={platform}
+                  >
+                    <Icon className="w-5 h-5 text-white" />
+                  </a>
+                )
+              })}
+            </div>
           )}
         </div>
 
