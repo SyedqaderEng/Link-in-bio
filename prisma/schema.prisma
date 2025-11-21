@@ -28,6 +28,20 @@ enum AnalyticsEventType {
   share
 }
 
+enum ProductType {
+  digital
+  service
+  subscription
+  donation
+}
+
+enum PurchaseStatus {
+  pending
+  completed
+  refunded
+  failed
+}
+
 model Profile {
   id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email             String         @unique
@@ -50,6 +64,8 @@ model Profile {
   analytics         Analytics[]
   subscription      Subscription?
   theme             Theme?         @relation(fields: [themeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products          Product[]
+  purchases         Purchase[]
 
   @@map("profiles")
   @@index([username])
@@ -137,4 +153,54 @@ model Subscription {
   user                  Profile             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
+}
+
+model Product {
+  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  name            String
+  description     String?
+  type            ProductType   @default(digital)
+  price           Decimal       @db.Decimal(10, 2)
+  currency        String        @default("usd") @db.VarChar(3)
+  imageUrl        String?       @map("image_url")
+  downloadUrl     String?       @map("download_url")
+  stripeProductId String?       @unique @map("stripe_product_id")
+  stripePriceId   String?       @unique @map("stripe_price_id")
+  isActive        Boolean       @default(true) @map("is_active")
+  salesCount      Int           @default(0) @map("sales_count")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user            Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchases       Purchase[]
+
+  @@map("products")
+  @@index([userId])
+}
+
+model Purchase {
+  id                  String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  productId           String          @map("product_id") @db.Uuid
+  customerId          String          @map("customer_id") @db.Uuid
+  buyerEmail          String          @map("buyer_email")
+  buyerName           String?         @map("buyer_name")
+  amount              Decimal         @db.Decimal(10, 2)
+  currency            String          @default("usd") @db.VarChar(3)
+  status              PurchaseStatus  @default(pending)
+  stripePaymentId     String?         @unique @map("stripe_payment_id")
+  stripeCheckoutId    String?         @map("stripe_checkout_id")
+  downloadToken       String?         @unique @map("download_token")
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  product             Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer            Profile         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+  @@index([productId])
+  @@index([customerId])
+  @@index([buyerEmail])
 }
