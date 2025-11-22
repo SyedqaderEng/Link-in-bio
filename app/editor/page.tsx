@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { Plus, GripVertical, Trash2, Eye, EyeOff, ExternalLink, Save, RefreshCw, Image as ImageIcon } from 'lucide-react'
+import { Plus, GripVertical, Trash2, Eye, EyeOff, ExternalLink, Save, RefreshCw, Image as ImageIcon, Sparkles, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/Toast'
 
 interface Link {
   id: string
@@ -15,6 +16,8 @@ interface Link {
   clickCount: number
   thumbnail?: string | null
   description?: string | null
+  scheduledStart?: string | null
+  scheduledEnd?: string | null
 }
 
 interface LinkMetadata {
@@ -31,7 +34,9 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [fetchingMetadata, setFetchingMetadata] = useState<Record<number, boolean>>({})
+  const [generatingAI, setGeneratingAI] = useState<Record<number, boolean>>({})
   const router = useRouter()
+  const toast = useToast()
 
   useEffect(() => {
     loadLinks()
@@ -116,6 +121,48 @@ export default function EditorPage() {
       console.error('Error fetching metadata:', error)
     } finally {
       setFetchingMetadata(prev => ({ ...prev, [index]: false }))
+    }
+  }
+
+  const generateAITitle = async (index: number) => {
+    const link = links[index]
+    if (!link.url || link.url === 'https://') {
+      toast.warning('Please enter a URL first')
+      return
+    }
+
+    setGeneratingAI(prev => ({ ...prev, [index]: true }))
+
+    try {
+      const response = await fetch('/api/ai/generate-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: link.url,
+          description: link.description,
+          count: 3,
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to generate suggestions')
+
+      const { suggestions } = await response.json()
+
+      if (suggestions && suggestions.length > 0) {
+        const newLinks = [...links]
+        newLinks[index] = {
+          ...newLinks[index],
+          title: suggestions[0].title,
+          description: suggestions[0].description,
+        }
+        setLinks(newLinks)
+        toast.success('AI-generated title applied!')
+      }
+    } catch (error: any) {
+      console.error('Error generating AI title:', error)
+      toast.error('Failed to generate AI suggestions')
+    } finally {
+      setGeneratingAI(prev => ({ ...prev, [index]: false }))
     }
   }
 
@@ -297,6 +344,14 @@ export default function EditorPage() {
                       title="Fetch metadata"
                     >
                       <RefreshCw className={`w-4 h-4 ${fetchingMetadata[index] ? 'animate-spin' : ''}`} />
+                    </button>
+                    <button
+                      onClick={() => generateAITitle(index)}
+                      disabled={generatingAI[index]}
+                      className="px-4 py-2 bg-purple-500/20 text-purple-500 rounded-lg hover:bg-purple-500/30 transition disabled:opacity-50 flex items-center gap-2"
+                      title="Generate AI title"
+                    >
+                      <Sparkles className={`w-4 h-4 ${generatingAI[index] ? 'animate-pulse' : ''}`} />
                     </button>
                   </div>
 

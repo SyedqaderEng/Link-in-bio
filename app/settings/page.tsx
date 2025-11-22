@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import DashboardLayout from '@/components/DashboardLayout'
-import { User, Mail, Lock, Globe, CreditCard, Trash2, Save, QrCode, Download, Share2, Link2, Eye, Upload, FileDown } from 'lucide-react'
+import { User, Mail, Lock, Globe, CreditCard, Trash2, Save, QrCode, Download, Share2, Link2, Eye, Upload, FileDown, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import QRCode from 'qrcode'
 import SocialLinksEditor from '@/components/SocialLinksEditor'
@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const toast = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [generatingBio, setGeneratingBio] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -115,6 +116,38 @@ export default function SettingsPage() {
   const previewProfile = () => {
     const profileUrl = `${window.location.origin}/${formData.username}`
     window.open(profileUrl, '_blank')
+  }
+
+  const generateAIBio = async () => {
+    if (!formData.displayName && !formData.bio) {
+      toast.warning('Add your name or some keywords about yourself first')
+      return
+    }
+
+    setGeneratingBio(true)
+
+    try {
+      const response = await fetch('/api/ai/generate-bio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: formData.displayName || formData.bio,
+          tone: 'professional',
+          length: 'short',
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to generate bio')
+
+      const { bio } = await response.json()
+      setFormData({ ...formData, bio })
+      toast.success('AI-generated bio applied!')
+    } catch (error: any) {
+      console.error('Error generating bio:', error)
+      toast.error('Failed to generate bio')
+    } finally {
+      setGeneratingBio(false)
+    }
   }
 
   const exportData = async () => {
@@ -407,7 +440,17 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Bio</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Bio</label>
+                <button
+                  onClick={generateAIBio}
+                  disabled={generatingBio}
+                  className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 text-purple-500 rounded-lg hover:bg-purple-500/30 transition text-sm disabled:opacity-50"
+                >
+                  <Sparkles className={`w-4 h-4 ${generatingBio ? 'animate-pulse' : ''}`} />
+                  {generatingBio ? 'Generating...' : 'AI Generate'}
+                </button>
+              </div>
               <textarea
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
